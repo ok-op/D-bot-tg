@@ -72,7 +72,7 @@ jobs:
 
               curl -s -F "document=@$part" -F "chat_id=$CHAT_ID" \
                    -F "caption=$CAPTION" -F "parse_mode=Markdown" \
-                   -F "thumb=@thumb.jpg" \
+                   -F "thumb=@thumb.png" \
                    "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument"
               sleep 2
             done
@@ -98,5 +98,5 @@ jobs:
         run: |
           curl -s -F "document=@upload_log.txt" -F "chat_id=$CHAT_ID" \
                -F "caption=📄 Upload Log File" \
-               -F "thumb2=@thumb2.png" \
+               -F "thumb=@thumb2.png" \
                "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument"
