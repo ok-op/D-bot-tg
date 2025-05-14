@@ -56,6 +56,8 @@ jobs:
 
           echo "Uploading the file..." > upload_log.txt
 
+          curl -sL "https://graph.org/file/4e8a1172e8ba4b7a0bdfa.jpg" -o thumb.jpg
+
           if ls part_* 1> /dev/null 2>&1; then
             echo "Uploading split parts" >> upload_log.txt
             for part in part_*; do
@@ -66,7 +68,7 @@ jobs:
               CAPTION+="\`${IMAGE_TITLE}\`"$'\n'
               CAPTION+="📦 *Part:* \`${part}\`"$'\n'
               CAPTION+="📐 *Size:* \`${PART_SIZE}\`"
-              
+
               curl -s -F "document=@$part" -F "chat_id=$CHAT_ID" \
                    -F "caption=$CAPTION" -F "parse_mode=Markdown" \
                    -F "thumb=@thumb.jpg" \
@@ -79,8 +81,7 @@ jobs:
             CAPTION="🧱 Docker Image:"$'\n'
             CAPTION+="\`${IMAGE_TITLE}\`"$'\n'
             CAPTION+="📐 Size: \`${FILE_SIZE}\`"
-            
-            curl -sL "https://graph.org/file/4e8a1172e8ba4b7a0bdfa.jpg" -o thumb.jpg
+
             curl -s -F "document=@stream.tar" -F "chat_id=$CHAT_ID" \
                  -F "caption=$CAPTION" -F "parse_mode=Markdown" \
                  -F "thumb=@thumb.jpg" \
