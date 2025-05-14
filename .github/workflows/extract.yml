@@ -67,13 +67,15 @@ jobs:
               PART_SIZE=$(du -h "$part" | cut -f1)
               echo "Uploading part: $part ($PART_SIZE)"
               curl -s -F "document=@$part" -F "chat_id=$CHAT_ID" \
-              -F "caption=🧱 *Docker Image:* `${IMAGE_TITLE}`%0A📦 *Part:* ${part}%0A📐 *Size:* ${PART_SIZE}" \
+              -F "caption=🧱 *Docker Image:*\n`${IMAGE_TITLE}`\n📦 *Part:* `${part}`\n📐 *Size:* `${PART_SIZE}`" \
+              -F "parse_mode=Markdown" \
               "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument"
               sleep 2
             done
           else
             echo "Uploading the whole stream.tar"
             curl -s -F "document=@stream.tar" -F "chat_id=$CHAT_ID" \
-            -F "caption=🧱 *Docker Image:* `${IMAGE_TITLE}`%0A📐 *Size:* ${FILE_SIZE}" \
+            -F "caption=🧱 *Docker Image:*\n`${IMAGE_TITLE}`\n📐 *Size:* `${FILE_SIZE}`" \
+            -F "parse_mode=Markdown" \
             "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument"
           fi
