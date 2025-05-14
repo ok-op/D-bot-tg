@@ -69,9 +69,7 @@ jobs:
               echo "Uploading part: $part ($PART_SIZE)"
 
               CAPTION="🧱 *Docker Image:*
-\`${IMAGE_TITLE}\`
-📦 *Part:* \`${part}\`
-📐 *Size:* \`${PART_SIZE}\`"
+\`${IMAGE_TITLE}\`📦 *Part:* \`${part}\`📐 *Size:* \`${PART_SIZE}\`"
 
               curl -s -F "document=@$part" -F "chat_id=$CHAT_ID" \
                    -F "caption=$CAPTION" -F "parse_mode=Markdown" \
