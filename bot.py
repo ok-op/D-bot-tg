@@ -32,7 +32,7 @@ def home():
 # /start command with welcome image and button
 @bot.on_message(filters.command("start"))
 async def start_command(client, message):
-    image_url = "https://graph.org/file/4e8a1172e8ba4b7a0bdfa.jpg"  # Change to your image URL or local path
+    image_url = "https://graph.org/file/4e8a1172e8ba4b7a0bdfa.jpg"
     await message.reply_photo(
         photo=image_url,
         caption="**Welcome to the Docker Image Bot!**\n\nUse `/send` to receive the latest extracted image.",
@@ -41,7 +41,7 @@ async def start_command(client, message):
         ])
     )
 
-# /send command (same as upload) - anyone can use
+# /send command (local file)
 @bot.on_message(filters.command("send"))
 async def send_tar(client, message):
     file_path = "stream.tar"
@@ -55,6 +55,16 @@ async def send_tar(client, message):
         )
     else:
         await message.reply("The stream.tar file was not found!")
+
+# /sendurl command (from Transfer.sh)
+@bot.on_message(filters.command("sendurl"))
+async def send_from_url(client, message):
+    file_url = "https://transfer.sh/abc123/stream.tar"  # Replace with your own transfer.sh link
+    await client.send_document(
+        chat_id=message.chat.id,
+        document=file_url,
+        caption="Here is your extracted Docker image via Transfer.sh!"
+    )
 
 # Run both Flask and Bot together
 def run_web():
