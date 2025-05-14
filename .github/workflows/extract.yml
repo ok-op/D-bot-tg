@@ -33,7 +33,7 @@ jobs:
       - name: Split the Docker image if needed
         run: |
           FILE_SIZE=$(stat --format="%s" stream.tar)
-          if [ $FILE_SIZE -gt 52428800 ]; then  # 50MB = 52428800 bytes
+          if [ $FILE_SIZE -gt 52428800 ]; then  # 50MB
             echo "Splitting the file into 49MB chunks..."
             split -b 49M stream.tar part_
           else
@@ -49,8 +49,9 @@ jobs:
       - name: Upload logs
         run: |
           echo "Uploading the file..." > upload_log.txt
-          curl -F "document=@stream.tar" -F "chat_id=$CHAT_ID" -F "caption=Extracted Docker Image" \
-          "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument" >> upload_log.txt
+          curl -F "document=@stream.tar" -F "chat_id=$CHAT_ID" \
+               -F "caption=Extracted Docker Image" \
+               "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument" >> upload_log.txt
           echo "Upload completed." >> upload_log.txt
 
       - name: Upload to Telegram
@@ -66,16 +67,25 @@ jobs:
             for part in part_*; do
               PART_SIZE=$(du -h "$part" | cut -f1)
               echo "Uploading part: $part ($PART_SIZE)"
+
+              CAPTION="🧱 *Docker Image:*
+\`${IMAGE_TITLE}\`
+📦 *Part:* \`${part}\`
+📐 *Size:* \`${PART_SIZE}\`"
+
               curl -s -F "document=@$part" -F "chat_id=$CHAT_ID" \
-              -F "caption=🧱 *Docker Image:*\n`${IMAGE_TITLE}`\n📦 *Part:* `${part}`\n📐 *Size:* `${PART_SIZE}`" \
-              -F "parse_mode=Markdown" \
-              "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument"
+                   -F "caption=$CAPTION" -F "parse_mode=Markdown" \
+                   "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument"
               sleep 2
             done
           else
             echo "Uploading the whole stream.tar"
+
+            CAPTION="🧱 *Docker Image:*
+\`${IMAGE_TITLE}\`
+📐 *Size:* \`${FILE_SIZE}\`"
+
             curl -s -F "document=@stream.tar" -F "chat_id=$CHAT_ID" \
-            -F "caption=🧱 *Docker Image:*\n`${IMAGE_TITLE}`\n📐 *Size:* `${FILE_SIZE}`" \
-            -F "parse_mode=Markdown" \
-            "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument"
+                 -F "caption=$CAPTION" -F "parse_mode=Markdown" \
+                 "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument"
           fi
