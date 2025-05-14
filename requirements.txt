@@ -1,0 +1,7 @@
+pyrogram==2.0.106
+tgcrypto
+python-dotenv
+flask
+requests
+uvicorn
+flask[async]
