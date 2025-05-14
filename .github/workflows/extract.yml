@@ -69,6 +69,7 @@ jobs:
               
               curl -s -F "document=@$part" -F "chat_id=$CHAT_ID" \
                    -F "caption=$CAPTION" -F "parse_mode=Markdown" \
+                   -F "thumb=@thumb.jpg" \
                    "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument"
               sleep 2
             done
@@ -78,9 +79,11 @@ jobs:
             CAPTION="🧱 Docker Image:"$'\n'
             CAPTION+="\`${IMAGE_TITLE}\`"$'\n'
             CAPTION+="📐 Size: \`${FILE_SIZE}\`"
-
+            
+            curl -sL "https://graph.org/file/4e8a1172e8ba4b7a0bdfa.jpg" -o thumb.jpg
             curl -s -F "document=@stream.tar" -F "chat_id=$CHAT_ID" \
                  -F "caption=$CAPTION" -F "parse_mode=Markdown" \
+                 -F "thumb=@thumb.jpg" \
                  "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument"
           fi
 
