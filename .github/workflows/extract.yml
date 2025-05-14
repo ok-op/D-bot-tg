@@ -56,7 +56,8 @@ jobs:
 
           echo "Uploading the file..." > upload_log.txt
 
-          curl -sL "https://graph.org/file/4e8a1172e8ba4b7a0bdfa.jpg" -o thumb.jpg
+          curl -sL "https://i.ibb.co/WW8C1XLL/dockerfile.png" -o thumb.jpg
+          curl -sL "https://i.ibb.co/j9n6nZxD/Op-log.png" -o thumb2.jpg
 
           if ls part_* 1> /dev/null 2>&1; then
             echo "Uploading split parts" >> upload_log.txt
@@ -97,5 +98,5 @@ jobs:
         run: |
           curl -s -F "document=@upload_log.txt" -F "chat_id=$CHAT_ID" \
                -F "caption=📄 Upload Log File" \
-               -F "thumb=@thumb.jpg" \
+               -F "thumb2=@thumb2.jpg" \
                "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument"
