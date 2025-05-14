@@ -29,9 +29,21 @@ def home():
         "channel": "📢 Join our channel: @Opleech_WD"
     })
 
-# /upload command to send stream.tar
-@bot.on_message(filters.command("upload") & filters.user(OWNER_ID))
-async def upload_tar(client, message):
+# /start command with welcome image and button
+@bot.on_message(filters.command("start"))
+async def start_command(client, message):
+    image_url = "https://graph.org/file/4e8a1172e8ba4b7a0bdfa.jpg"  # Change to your image URL or local path
+    await message.reply_photo(
+        photo=image_url,
+        caption="**Welcome to the Docker Image Bot!**\n\nUse `/send` to receive the latest extracted image.",
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Join Channel", url="https://t.me/Opleech_WD")]
+        ])
+    )
+
+# /send command (same as upload) - anyone can use
+@bot.on_message(filters.command("send"))
+async def send_tar(client, message):
     file_path = "stream.tar"
     if os.path.exists(file_path):
         await message.reply_document(
