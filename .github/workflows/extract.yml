@@ -3,9 +3,9 @@ name: Extract Docker Image
 on:
   push:
     branches:
-      - main 
-  workflow_dispatch:  
-  
+      - main
+  workflow_dispatch:
+
 jobs:
   extract:
     runs-on: ubuntu-latest
@@ -32,7 +32,6 @@ jobs:
 
       - name: Split the Docker image if needed
         run: |
-          # Split the stream.tar file into 500MB parts if it's larger than 500MB
           FILE_SIZE=$(stat --format="%s" stream.tar)
           if [ $FILE_SIZE -gt 524288000 ]; then
             echo "Splitting the file into 500MB chunks..."
@@ -40,23 +39,53 @@ jobs:
           else
             echo "File is less than 500MB, no split required."
           fi
-          # Debugging step to check if the split worked
           ls -lh
+
+      - name: Print file size
+        run: |
+          FILE_SIZE=$(stat --format="%s" stream.tar)
+          echo "File size: $FILE_SIZE bytes"
+
+      - name: Upload logs
+        run: |
+          echo "Uploading the file..." > upload_log.txt
+          curl -F "document=@stream.tar" -F "chat_id=$CHAT_ID" -F "caption=Extracted Docker Image" \
+          "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument" >> upload_log.txt
+          echo "Upload completed." >> upload_log.txt
+
+      - name: Upload with retry logic
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+        run: |
+          for i in {1..3}; do
+            if curl -F "document=@stream.tar" -F "chat_id=$CHAT_ID" \
+              -F "caption=Extracted Docker Image" \
+              "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument"; then
+              echo "Upload successful."
+              break
+            else
+              echo "Upload failed. Attempt $i"
+              sleep 5
+            fi
+          done
 
       - name: Upload to Telegram
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
-          # If the file is split, upload each part separately
           if [ -f part_aa ]; then
             echo "Uploading split parts"
             for part in part_*; do
               echo "Uploading part: $part"
-              curl -F "document=@$part" -F "chat_id=$CHAT_ID" -F "caption=Extracted Docker Image" "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument"
+              curl -F "document=@$part" -F "chat_id=$CHAT_ID" \
+              -F "caption=Extracted Docker Image ($part)" \
+              "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument"
             done
           else
-            # If the file is not split, upload the single file
             echo "Uploading the whole stream.tar"
-            curl -F "document=@stream.tar" -F "chat_id=$CHAT_ID" -F "caption=Extracted Docker Image" "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument"
+            curl -F "document=@stream.tar" -F "chat_id=$CHAT_ID" \
+            -F "caption=Extracted Docker Image" \
+            "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument"
           fi
