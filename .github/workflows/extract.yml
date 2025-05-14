@@ -33,11 +33,11 @@ jobs:
       - name: Split the Docker image if needed
         run: |
           FILE_SIZE=$(stat --format="%s" stream.tar)
-          if [ $FILE_SIZE -gt 524288000 ]; then
-            echo "Splitting the file into 500MB chunks..."
-            split -b 500M stream.tar part_
+          if [ $FILE_SIZE -gt 52428800 ]; then  # 50MB = 52428800 bytes
+            echo "Splitting the file into 49MB chunks..."
+            split -b 49M stream.tar part_
           else
-            echo "File is less than 500MB, no split required."
+            echo "File is less than 50MB, no split required."
           fi
           ls -lh
 
@@ -75,17 +75,18 @@ jobs:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
-          if [ -f part_aa ]; then
+          if ls part_* 1> /dev/null 2>&1; then
             echo "Uploading split parts"
             for part in part_*; do
               echo "Uploading part: $part"
-              curl -F "document=@$part" -F "chat_id=$CHAT_ID" \
-              -F "caption=Extracted Docker Image ($part)" \
+              curl -s -F "document=@$part" -F "chat_id=$CHAT_ID" \
+              -F "caption=Extracted Docker Image: $part" \
               "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument"
+              sleep 2  # Avoid hitting rate limits
             done
           else
             echo "Uploading the whole stream.tar"
-            curl -F "document=@stream.tar" -F "chat_id=$CHAT_ID" \
+            curl -s -F "document=@stream.tar" -F "chat_id=$CHAT_ID" \
             -F "caption=Extracted Docker Image" \
             "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument"
           fi
