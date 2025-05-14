@@ -1,1 +1,1 @@
-woodcraftbot/angel:stable
+woodcraftbot/copy-ubuntu:3
