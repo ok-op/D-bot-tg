@@ -38,17 +38,26 @@ jobs:
             echo "Splitting the file into 500MB chunks..."
             split -b 500M stream.tar part_
           fi
+          # Debugging step to check the files created
+          ls -lh
 
       - name: Upload to Telegram
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
+          # Debugging step to check if part files exist
+          echo "Checking for part files"
+          ls -lh part_*
+
           # If the file is split, upload each part separately
           for part in part_*; do
+            echo "Uploading part: $part"
             curl -F "document=@$part" -F "chat_id=$CHAT_ID" -F "caption=Extracted Docker Image" "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument"
           done
+          
           # If the file is not split, upload the single file
           if [ ! -f part_aa ]; then
+            echo "Uploading stream.tar"
             curl -F "document=@stream.tar" -F "chat_id=$CHAT_ID" -F "caption=Extracted Docker Image" "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument"
           fi
