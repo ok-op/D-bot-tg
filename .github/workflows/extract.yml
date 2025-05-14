@@ -24,4 +24,4 @@ jobs:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
-          curl -F document=@stream.tar "https://api.telegram.org/bot$BOT_TOKEN/sendDocument?chat_id=$CHAT_ID&caption=Extracted Docker Image"
+          curl -F "document=@stream.tar" -F "chat_id=$CHAT_ID" -F "caption=Extracted Docker Image" "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument"
