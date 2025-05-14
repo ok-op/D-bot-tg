@@ -1,1 +1,1 @@
-labani/stream:latest
+woodcraftbot/angel:stable
