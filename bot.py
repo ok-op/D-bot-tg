@@ -1,4 +1,6 @@
 import os
+import subprocess
+import requests
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from dotenv import load_dotenv
@@ -29,44 +31,46 @@ def home():
         "channel": "📢 Join our channel: @Opleech_WD"
     })
 
-# /start command with welcome image and button
+# /start command
 @bot.on_message(filters.command("start"))
 async def start_command(client, message):
     image_url = "https://graph.org/file/4e8a1172e8ba4b7a0bdfa.jpg"
     await message.reply_photo(
         photo=image_url,
-        caption="**Welcome to the Docker Image Bot!**\n\nUse `/send` to receive the latest extracted image.",
+        caption="**Welcome to the Docker Image Bot!**\n\nUse `/download` to receive the latest Docker image.",
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("Join Channel", url="https://t.me/Opleech_WD")]
         ])
     )
 
-# /send command (local file)
-@bot.on_message(filters.command("send"))
-async def send_tar(client, message):
-    file_path = "stream.tar"
-    if os.path.exists(file_path):
-        await message.reply_document(
-            document=file_path,
-            caption="Here is your extracted Docker image!",
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("⬇️ Download", url=f"https://t.me/{(await client.get_me()).username}?start=download")]
-            ])
+# /download command to dynamically fetch docker image, export & send
+@bot.on_message(filters.command("download"))
+async def download_docker_image(client, message):
+    status = await message.reply("Pulling Docker image, please wait...")
+
+    try:
+        # Step 1: Pull Docker image
+        subprocess.run(["docker", "pull", "labani/stream:latest"], check=True)
+
+        # Step 2: Create container and export as stream.tar
+        subprocess.run(["docker", "create", "--name", "tempcontainer", "labani/stream:latest"], check=True)
+        subprocess.run("docker export tempcontainer > stream.tar", shell=True, check=True)
+        subprocess.run(["docker", "rm", "tempcontainer"], check=True)
+
+        # Step 3: Send the file
+        await client.send_document(
+            chat_id=message.chat.id,
+            document="stream.tar",
+            caption="✅ Docker image exported and sent!"
         )
-    else:
-        await message.reply("The stream.tar file was not found!")
 
-# /sendurl command (from Transfer.sh)
-@bot.on_message(filters.command("sendurl"))
-async def send_from_url(client, message):
-    file_url = "https://transfer.sh/abc123/stream.tar"  # Replace with your own transfer.sh link
-    await client.send_document(
-        chat_id=message.chat.id,
-        document=file_url,
-        caption="Here is your extracted Docker image via Transfer.sh!"
-    )
+        await status.edit("✅ Done! Docker image sent successfully.")
+    except subprocess.CalledProcessError as e:
+        await status.edit("❌ Failed to process Docker image.\nCheck logs or Docker status.")
+    except Exception as ex:
+        await status.edit(f"❌ Unexpected error: {ex}")
 
-# Run both Flask and Bot together
+# Run Flask and Bot
 def run_web():
     web_app.run(host='0.0.0.0', port=PORT)
 
