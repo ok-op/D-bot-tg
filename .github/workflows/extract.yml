@@ -1,0 +1,27 @@
+name: Extract Docker Image
+
+on:
+  workflow_dispatch:
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Pull Docker image
+        run: docker pull labani/stream:latest
+
+      - name: Create and export container
+        run: |
+          docker create --name tempcontainer labani/stream:latest
+          docker export tempcontainer > stream.tar
+
+      - name: Upload to Telegram
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+        run: |
+          curl -F document=@stream.tar "https://api.telegram.org/bot$BOT_TOKEN/sendDocument?chat_id=$CHAT_ID&caption=Extracted Docker Image"
