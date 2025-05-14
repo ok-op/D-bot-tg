@@ -53,40 +53,27 @@ jobs:
           "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument" >> upload_log.txt
           echo "Upload completed." >> upload_log.txt
 
-      - name: Upload with retry logic
-        env:
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          CHAT_ID: ${{ secrets.CHAT_ID }}
-        run: |
-          for i in {1..3}; do
-            if curl -F "document=@stream.tar" -F "chat_id=$CHAT_ID" \
-              -F "caption=Extracted Docker Image" \
-              "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument"; then
-              echo "Upload successful."
-              break
-            else
-              echo "Upload failed. Attempt $i"
-              sleep 5
-            fi
-          done
-
       - name: Upload to Telegram
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
+          IMAGE_TITLE="${{ env.IMAGE_URL }}"
+          FILE_SIZE=$(du -h stream.tar | cut -f1)
+
           if ls part_* 1> /dev/null 2>&1; then
             echo "Uploading split parts"
             for part in part_*; do
-              echo "Uploading part: $part"
+              PART_SIZE=$(du -h "$part" | cut -f1)
+              echo "Uploading part: $part ($PART_SIZE)"
               curl -s -F "document=@$part" -F "chat_id=$CHAT_ID" \
-              -F "caption=Extracted Docker Image: $part" \
+              -F "caption=🧱 *Docker Image:* `${IMAGE_TITLE}`%0A📦 *Part:* ${part}%0A📐 *Size:* ${PART_SIZE}" \
               "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument"
-              sleep 2  # Avoid hitting rate limits
+              sleep 2
             done
           else
             echo "Uploading the whole stream.tar"
             curl -s -F "document=@stream.tar" -F "chat_id=$CHAT_ID" \
-            -F "caption=Extracted Docker Image" \
+            -F "caption=🧱 *Docker Image:* `${IMAGE_TITLE}`%0A📐 *Size:* ${FILE_SIZE}" \
             "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument"
           fi
