@@ -97,4 +97,5 @@ jobs:
         run: |
           curl -s -F "document=@upload_log.txt" -F "chat_id=$CHAT_ID" \
                -F "caption=📄 Upload Log File" \
+               -F "thumb=@thumb.jpg" \
                "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument"
