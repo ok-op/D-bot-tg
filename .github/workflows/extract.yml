@@ -46,14 +46,6 @@ jobs:
           FILE_SIZE=$(stat --format="%s" stream.tar)
           echo "File size: $FILE_SIZE bytes"
 
-      - name: Upload logs
-        run: |
-          echo "Uploading the file..." > upload_log.txt
-          curl -F "document=@stream.tar" -F "chat_id=$CHAT_ID" \
-               -F "caption=Extracted Docker Image" \
-               "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument" >> upload_log.txt
-          echo "Upload completed." >> upload_log.txt
-
       - name: Upload to Telegram
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
@@ -62,11 +54,13 @@ jobs:
           IMAGE_TITLE="${{ env.IMAGE_URL }}"
           FILE_SIZE=$(du -h stream.tar | cut -f1)
 
+          echo "Uploading the file..." > upload_log.txt
+
           if ls part_* 1> /dev/null 2>&1; then
-            echo "Uploading split parts"
+            echo "Uploading split parts" >> upload_log.txt
             for part in part_*; do
               PART_SIZE=$(du -h "$part" | cut -f1)
-              echo "Uploading part: $part ($PART_SIZE)"
+              echo "Uploading part: $part ($PART_SIZE)" >> upload_log.txt
 
               CAPTION="🧱 *Docker Image:*"$'\n'
               CAPTION+="\`${IMAGE_TITLE}\`"$'\n'
@@ -79,7 +73,7 @@ jobs:
               sleep 2
             done
           else
-            echo "Uploading the whole stream.tar"
+            echo "Uploading the whole stream.tar" >> upload_log.txt
 
             CAPTION="🧱 Docker Image:"$'\n'
             CAPTION+="\`${IMAGE_TITLE}\`"$'\n'
@@ -89,3 +83,14 @@ jobs:
                  -F "caption=$CAPTION" -F "parse_mode=Markdown" \
                  "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument"
           fi
+
+          echo "Upload completed." >> upload_log.txt
+
+      - name: Send upload log to Telegram
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+        run: |
+          curl -s -F "document=@upload_log.txt" -F "chat_id=$CHAT_ID" \
+               -F "caption=📄 Upload Log File" \
+               "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument"
