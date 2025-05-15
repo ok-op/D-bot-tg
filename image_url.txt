@@ -1,1 +1,1 @@
-woodcraftbot/copy-ubuntu:3
+woodcraftbot/1tamilmv-bot:latest
